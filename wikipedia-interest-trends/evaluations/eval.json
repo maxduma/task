@@ -1,0 +1,43 @@
+{
+  "description": "Evaluation scenarios for the wikipedia-interest-trends skill. Run each query with the skill loaded on the target model (e.g. Claude Haiku 4.5) and check the expected behaviors. These are rubric-based, not exact-match.",
+  "scenarios": [
+    {
+      "id": "compare-two-languages",
+      "skills": ["wikipedia-interest-trends"],
+      "query": "Compare the growth of interest in intermittent fasting in Polish- and Czech-language Wikipedia over the last two years.",
+      "expected_behavior": [
+        "Runs the CLI (resolve and/or run) rather than re-implementing analysis in the model",
+        "Reports the exact resolved article titles for pl and cs",
+        "Flags that Polish has no matching concept article (method none) and offers a --title override instead of inventing a result",
+        "States trend direction and period-over-period growth for the resolved language(s)",
+        "Reports a confidence rating and at least one caveat (volume, seasonality, spikes, or match quality)",
+        "Produces a one-page PDF and a PNG chart in out/"
+      ]
+    },
+    {
+      "id": "single-topic-trust",
+      "skills": ["wikipedia-interest-trends"],
+      "query": "We might add an astronomy course. Is interest in astronomy growing in Ukrainian Wikipedia, and how much can we trust that?",
+      "expected_behavior": [
+        "Resolves the Ukrainian article for astronomy via Wikidata (high confidence)",
+        "Uses a window of at least 24 months",
+        "Answers the growth question with trend direction plus Mann-Kendall p-value or Sen's slope",
+        "Explicitly addresses trustworthiness using the confidence rating and its reasons",
+        "Names limitations: pageviews are attention not willingness to pay; language edition is not a market",
+        "Generates the PDF report in Ukrainian"
+      ]
+    },
+    {
+      "id": "multi-language-scan",
+      "skills": ["wikipedia-interest-trends"],
+      "query": "We are building a language-learning app. Compare interest in learning English across a few language editions and tell us which audiences to explore next and why.",
+      "expected_behavior": [
+        "Runs a single multi-language analysis (does not loop one API call per data point)",
+        "Ranks languages by growth using comparison.rankedByGrowth",
+        "Ties the recommendation to the data and to per-language confidence",
+        "Distinguishes languages with no/low data from genuine declines",
+        "Produces a shareable one-page PDF"
+      ]
+    }
+  ]
+}

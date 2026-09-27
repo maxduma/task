@@ -1,0 +1,25 @@
+{
+  "name": "wikipedia-interest-trends",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent Skill: analyze Wikipedia pageview trends to guide B2C topic and language decisions.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "cli": "tsx src/cli.ts",
+    "test": "node --import tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "@types/pdfkit": "^0.13.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}

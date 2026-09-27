@@ -1,0 +1,17 @@
+DejaVu Sans (DejaVuSans.ttf, DejaVuSans-Bold.ttf)
+
+These fonts are used to render Cyrillic and Latin-diacritic text in generated charts and PDFs.
+
+DejaVu fonts are based on the Bitstream Vera Fonts and the Arev fonts and are distributed under
+the permissive DejaVu Fonts license, which allows use, redistribution, and modification (including
+bundling with software) provided the copyright and license notices are retained. The fonts are not
+sold by themselves.
+
+Project and full license: https://dejavu-fonts.github.io/
+
+Copyright:
+- Bitstream Vera Fonts Copyright (c) 2003 by Bitstream, Inc.
+- DejaVu changes are in the public domain / covered by the DejaVu Fonts license.
+
+The TTF files bundled here were obtained from the matplotlib distribution, which redistributes the
+same upstream DejaVu TTFs.
