@@ -6,7 +6,12 @@ import type {
   SeriesAnalysis,
   Series,
 } from "./types.ts";
-import { aggregateToMonthly, monthOf, monthsBetween, type Window } from "./dates.ts";
+import {
+  aggregateToMonthly,
+  monthOf,
+  monthsBetween,
+  type Window,
+} from "./dates.ts";
 import {
   centeredMovingMedian,
   coefficientOfVariation,
@@ -35,7 +40,9 @@ function expectedMonths(window: Window): string[] {
   const total = monthsBetween(window.from, window.to);
   for (let i = 0; i < total; i++) {
     const d = new Date(Date.UTC(fy!, fm! - 1 + i, 1));
-    out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+    out.push(
+      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`,
+    );
   }
   return out;
 }
@@ -49,7 +56,13 @@ export function alignMonthly(series: Series, window: Window): MonthlyAligned {
   const firstObserved = withData[0] ?? null;
   const lastObserved = withData[withData.length - 1] ?? null;
   if (!firstObserved || !lastObserved) {
-    return { dates: [], values: [], missing: 0, firstObserved: null, lastObserved: null };
+    return {
+      dates: [],
+      values: [],
+      missing: 0,
+      firstObserved: null,
+      lastObserved: null,
+    };
   }
   const active = months.filter((m) => m >= firstObserved && m <= lastObserved);
   let missing = 0;
@@ -57,7 +70,13 @@ export function alignMonthly(series: Series, window: Window): MonthlyAligned {
     if (!byMonth.has(m)) missing++;
     return byMonth.get(m) ?? 0;
   });
-  return { dates: active.map((m) => `${m}-01`), values, missing, firstObserved, lastObserved };
+  return {
+    dates: active.map((m) => `${m}-01`),
+    values,
+    missing,
+    firstObserved,
+    lastObserved,
+  };
 }
 
 function volumeBucket(meanMonthly: number): SeriesAnalysis["volumeBucket"] {
@@ -71,36 +90,62 @@ function computeGrowth(values: number[]) {
   const n = values.length;
   const k = Math.min(12, Math.floor(n / 2));
   if (k < 2) {
-    return { recentMean: mean(values), previousMean: 0, periodOverPeriodPct: null, cagrPct: null, comparisonWindowMonths: 0 };
+    return {
+      recentMean: mean(values),
+      previousMean: 0,
+      periodOverPeriodPct: null,
+      cagrPct: null,
+      comparisonWindowMonths: 0,
+    };
   }
   const recent = values.slice(n - k);
   const previous = values.slice(n - 2 * k, n - k);
   const recentMean = mean(recent);
   const previousMean = mean(previous);
-  const periodOverPeriodPct = previousMean > 0 ? ((recentMean - previousMean) / previousMean) * 100 : null;
+  const periodOverPeriodPct =
+    previousMean > 0
+      ? ((recentMean - previousMean) / previousMean) * 100
+      : null;
 
   // CAGR from smoothed endpoints (first/last up-to-3 months) to reduce edge noise.
   const head = mean(values.slice(0, Math.min(3, n)));
   const tail = mean(values.slice(Math.max(0, n - 3)));
   const years = n / 12;
-  const cagrPct = head > 0 && years > 0 ? (Math.pow(tail / head, 1 / years) - 1) * 100 : null;
+  const cagrPct =
+    head > 0 && years > 0 ? (Math.pow(tail / head, 1 / years) - 1) * 100 : null;
 
-  return { recentMean, previousMean, periodOverPeriodPct, cagrPct, comparisonWindowMonths: k };
+  return {
+    recentMean,
+    previousMean,
+    periodOverPeriodPct,
+    cagrPct,
+    comparisonWindowMonths: k,
+  };
 }
 
 function computeSeasonality(dates: string[], values: number[]) {
   if (values.length < 24) {
-    return { detected: false, strength: 0, peakMonth: null, troughMonth: null, note: "needs >= 24 months" };
+    return {
+      detected: false,
+      strength: 0,
+      peakMonth: null,
+      troughMonth: null,
+      note: "needs >= 24 months",
+    };
   }
   const overall = mean(values);
-  if (overall === 0) return { detected: false, strength: 0, peakMonth: null, troughMonth: null };
+  if (overall === 0)
+    return { detected: false, strength: 0, peakMonth: null, troughMonth: null };
   const byCalendarMonth = new Map<number, number[]>();
   for (let i = 0; i < values.length; i++) {
     const m = monthOf(dates[i]!);
-    (byCalendarMonth.get(m) ?? byCalendarMonth.set(m, []).get(m)!).push(values[i]!);
+    (byCalendarMonth.get(m) ?? byCalendarMonth.set(m, []).get(m)!).push(
+      values[i]!,
+    );
   }
   const indices: Array<{ month: number; index: number }> = [];
-  for (const [m, vs] of byCalendarMonth) indices.push({ month: m, index: mean(vs) / overall });
+  for (const [m, vs] of byCalendarMonth)
+    indices.push({ month: m, index: mean(vs) / overall });
   const idxValues = indices.map((x) => x.index);
   const strength = coefficientOfVariation(idxValues);
   let peak = indices[0]!;
@@ -119,28 +164,37 @@ function computeSeasonality(dates: string[], values: number[]) {
 
 function computeSpikes(dates: string[], values: number[]) {
   const n = values.length;
-  if (n < 4) return { spikeDates: [], spikeShareOfTotal: 0, growthRobustToSpikes: true };
+  if (n < 4)
+    return { spikeDates: [], spikeShareOfTotal: 0, growthRobustToSpikes: true };
 
   // Detrend against a centered moving median so a gradual trend or level shift is not counted as
   // many spikes; only points that jump above their LOCAL baseline are flagged.
   const baseline = centeredMovingMedian(values, 5);
   const residuals = values.map((v, i) => v - baseline[i]!);
   const z = robustZScores(residuals);
-  const spikeIdx = z.map((v, i) => (v > SPIKE_Z ? i : -1)).filter((i) => i >= 0);
+  const spikeIdx = z
+    .map((v, i) => (v > SPIKE_Z ? i : -1))
+    .filter((i) => i >= 0);
   const spikeDates = spikeIdx.map((i) => dates[i]!);
 
   const total = sum(values);
-  const excess = spikeIdx.reduce((a, i) => a + Math.max(0, values[i]! - baseline[i]!), 0);
+  const excess = spikeIdx.reduce(
+    (a, i) => a + Math.max(0, values[i]! - baseline[i]!),
+    0,
+  );
   const spikeShareOfTotal = total > 0 ? excess / total : 0;
 
   // Robustness: replace spikes with their local baseline and re-test the trend.
-  const cleaned = values.map((v, i) => (spikeIdx.includes(i) ? baseline[i]! : v));
+  const cleaned = values.map((v, i) =>
+    spikeIdx.includes(i) ? baseline[i]! : v,
+  );
   const originalSign = Math.sign(sensSlope(values));
   const cleanedSign = Math.sign(sensSlope(cleaned));
   const originallySignificant = mannKendall(values).pValue < 0.05;
   const cleanedSignificant = mannKendall(cleaned).pValue < 0.05;
   const growthRobustToSpikes =
-    originalSign === cleanedSign && (originallySignificant ? cleanedSignificant : true);
+    originalSign === cleanedSign &&
+    (originallySignificant ? cleanedSignificant : true);
 
   return { spikeDates, spikeShareOfTotal, growthRobustToSpikes };
 }
@@ -150,10 +204,17 @@ const STANDARD_CAVEATS = [
   "A Wikipedia language edition is not the same as a country or a market.",
 ];
 
-export function analyzeSeries(series: Series, resolved: ResolvedArticle, window: Window): SeriesAnalysis {
+export function analyzeSeries(
+  series: Series,
+  resolved: ResolvedArticle,
+  window: Window,
+): SeriesAnalysis {
   const aligned = alignMonthly(series, window);
   const { values, dates } = aligned;
-  const base: Omit<SeriesAnalysis, "growth" | "trend" | "seasonality" | "spikes"> = {
+  const base: Omit<
+    SeriesAnalysis,
+    "growth" | "trend" | "seasonality" | "spikes"
+  > = {
     language: series.language,
     project: series.project,
     article: series.article,
@@ -177,16 +238,44 @@ export function analyzeSeries(series: Series, resolved: ResolvedArticle, window:
   if (values.length === 0) {
     return {
       ...base,
-      growth: { recentMean: 0, previousMean: 0, periodOverPeriodPct: null, cagrPct: null, comparisonWindowMonths: 0 },
-      trend: {
-        slope: 0, intercept: 0, r2: 0, mkS: 0, mkTau: 0, mkZ: 0, mkPValue: 1,
-        sensSlope: 0, sensSlopeAnnualizedPct: 0, direction: "flat", significant: false,
+      growth: {
+        recentMean: 0,
+        previousMean: 0,
+        periodOverPeriodPct: null,
+        cagrPct: null,
+        comparisonWindowMonths: 0,
       },
-      seasonality: { detected: false, strength: 0, peakMonth: null, troughMonth: null, note: "no data" },
-      spikes: { spikeDates: [], spikeShareOfTotal: 0, growthRobustToSpikes: true },
+      trend: {
+        slope: 0,
+        intercept: 0,
+        r2: 0,
+        mkS: 0,
+        mkTau: 0,
+        mkZ: 0,
+        mkPValue: 1,
+        sensSlope: 0,
+        sensSlopeAnnualizedPct: 0,
+        direction: "flat",
+        significant: false,
+      },
+      seasonality: {
+        detected: false,
+        strength: 0,
+        peakMonth: null,
+        troughMonth: null,
+        note: "no data",
+      },
+      spikes: {
+        spikeDates: [],
+        spikeShareOfTotal: 0,
+        growthRobustToSpikes: true,
+      },
       confidence: "low",
       confidenceReasons: ["no pageview data for this article in the window"],
-      caveats: [`No data found for "${series.article}" in ${series.project}.`, ...STANDARD_CAVEATS],
+      caveats: [
+        `No data found for "${series.article}" in ${series.project}.`,
+        ...STANDARD_CAVEATS,
+      ],
     };
   }
 
@@ -194,7 +283,8 @@ export function analyzeSeries(series: Series, resolved: ResolvedArticle, window:
   const mk = mannKendall(values);
   const sens = sensSlope(values);
   const meanMonthly = base.meanMonthly;
-  const sensAnnualizedPct = meanMonthly > 0 ? (sens * 12) / meanMonthly * 100 : 0;
+  const sensAnnualizedPct =
+    meanMonthly > 0 ? ((sens * 12) / meanMonthly) * 100 : 0;
   const significant = mk.pValue < 0.05;
   const direction: SeriesAnalysis["trend"]["direction"] = significant
     ? mk.S > 0
@@ -215,11 +305,15 @@ export function analyzeSeries(series: Series, resolved: ResolvedArticle, window:
 
   if (mk.pValue < 0.01) score += 2;
   else if (mk.pValue < 0.05) score += 1;
-  else reasons.push(`trend not statistically significant (Mann-Kendall p=${mk.pValue.toFixed(2)})`);
+  else
+    reasons.push(
+      `trend not statistically significant (Mann-Kendall p=${mk.pValue.toFixed(2)})`,
+    );
 
   if (base.volumeBucket === "high") score += 2;
   else if (base.volumeBucket === "medium") score += 1;
-  else if (base.volumeBucket === "low") reasons.push("low pageview volume (noisy)");
+  else if (base.volumeBucket === "low")
+    reasons.push("low pageview volume (noisy)");
   else {
     score -= 1;
     reasons.push("very low pageview volume");
@@ -232,7 +326,8 @@ export function analyzeSeries(series: Series, resolved: ResolvedArticle, window:
   else reasons.push(`${base.missingBuckets} missing month(s) in range`);
 
   if (resolved.confidence === "high") score += 1;
-  else if (resolved.confidence === "medium") reasons.push("article match is uncertain");
+  else if (resolved.confidence === "medium")
+    reasons.push("article match is uncertain");
   else {
     score -= 2;
     reasons.push("no reliable article match");
@@ -243,19 +338,26 @@ export function analyzeSeries(series: Series, resolved: ResolvedArticle, window:
     reasons.push("seasonal pattern may bias a non-annual window");
   }
 
-  const confidence: Confidence = score >= 6 ? "high" : score >= 3 ? "medium" : "low";
+  const confidence: Confidence =
+    score >= 6 ? "high" : score >= 3 ? "medium" : "low";
 
   const caveats: string[] = [];
   if (base.volumeBucket === "very-low" || base.volumeBucket === "low") {
     caveats.push("Absolute interest is small; differences may be noise.");
   }
   if (seasonality.detected && seasonality.peakMonth) {
-    caveats.push(`Interest is seasonal (peaks around month ${seasonality.peakMonth}).`);
+    caveats.push(
+      `Interest is seasonal (peaks around month ${seasonality.peakMonth}).`,
+    );
   }
   if (spikes.spikeDates.length > 0) {
-    caveats.push(`${spikes.spikeDates.length} one-off spike(s) detected (e.g., ${spikes.spikeDates[0]}).`);
+    caveats.push(
+      `${spikes.spikeDates.length} one-off spike(s) detected (e.g., ${spikes.spikeDates[0]}).`,
+    );
   }
-  caveats.push(`Only the exact article "${series.article}" is counted (redirects/related pages excluded).`);
+  caveats.push(
+    `Only the exact article "${series.article}" is counted (redirects/related pages excluded).`,
+  );
   caveats.push(...STANDARD_CAVEATS);
 
   return {
@@ -288,7 +390,11 @@ function confRank(c: Confidence): number {
 
 export function buildComparison(results: SeriesAnalysis[]): Comparison {
   const ranked = [...results]
-    .map((r) => ({ language: r.language, periodOverPeriodPct: r.growth.periodOverPeriodPct, confidence: r.confidence }))
+    .map((r) => ({
+      language: r.language,
+      periodOverPeriodPct: r.growth.periodOverPeriodPct,
+      confidence: r.confidence,
+    }))
     .sort((a, b) => {
       const av = a.periodOverPeriodPct ?? Number.NEGATIVE_INFINITY;
       const bv = b.periodOverPeriodPct ?? Number.NEGATIVE_INFINITY;
@@ -296,7 +402,9 @@ export function buildComparison(results: SeriesAnalysis[]): Comparison {
     });
 
   const withData = ranked.filter((r) => r.periodOverPeriodPct !== null);
-  const noData = ranked.filter((r) => r.periodOverPeriodPct === null).map((r) => r.language);
+  const noData = ranked
+    .filter((r) => r.periodOverPeriodPct === null)
+    .map((r) => r.language);
   const strongest = withData[0]?.language ?? null;
   const weakest = withData[withData.length - 1]?.language ?? null;
 
@@ -313,13 +421,19 @@ export function buildComparison(results: SeriesAnalysis[]): Comparison {
   }
   if (withData.length >= 2) {
     const bottom = withData[withData.length - 1]!;
-    notes.push(`Weakest: ${bottom.language} (${fmt(bottom.periodOverPeriodPct!)}).`);
+    notes.push(
+      `Weakest: ${bottom.language} (${fmt(bottom.periodOverPeriodPct!)}).`,
+    );
   }
   if (noData.length > 0) notes.push(`No data for: ${noData.join(", ")}.`);
   if (new Set(withData.map((r) => r.confidence)).size > 1) {
-    notes.push("Compare with caution: data quality/confidence differs by language.");
+    notes.push(
+      "Compare with caution: data quality/confidence differs by language.",
+    );
   }
-  const trustworthy = withData.filter((r) => confRank(r.confidence) >= 1 && (r.periodOverPeriodPct ?? -1) > 0);
+  const trustworthy = withData.filter(
+    (r) => confRank(r.confidence) >= 1 && (r.periodOverPeriodPct ?? -1) > 0,
+  );
   if (trustworthy.length > 0 && trustworthy[0]!.language !== strongest) {
     notes.push(`Most trustworthy growth: ${trustworthy[0]!.language}.`);
   }

@@ -4,6 +4,7 @@ How each number in the analysis is defined. All metrics are computed on the **mo
 (daily input is summed into months). Code lives in `src/stats.ts` and `src/analyze.ts`.
 
 ## Contents
+
 - Series preparation
 - Volume and volatility
 - Growth (period-over-period, CAGR)
@@ -13,18 +14,21 @@ How each number in the analysis is defined. All metrics are computed on the **mo
 - Confidence rubric
 
 ## Series preparation
+
 - Fetch per-article pageviews, aggregate to monthly buckets.
 - Align to the window; the active range runs from the first to the last month with data. Interior
   months with no data are filled with 0 and counted as `missingBuckets`.
 - Months before the article existed are not counted as missing.
 
 ## Volume and volatility
+
 - `meanMonthly` — average monthly pageviews over the active range.
 - `volumeBucket` — `very-low` (<100), `low` (<1000), `medium` (<10000), `high` (>=10000). Lower
   volume means noisier estimates and lower confidence.
 - `volatilityCoV` — coefficient of variation (std / mean) of monthly views.
 
 ## Growth
+
 - `periodOverPeriodPct` — compares the mean of the last `k` months to the mean of the preceding `k`
   months, where `k = min(12, floor(monthsCovered / 2))`. Percent change `(recent - prev) / prev`.
 - `cagrPct` — compound annual growth rate from a smoothed start (mean of first up-to-3 months) to a
@@ -32,6 +36,7 @@ How each number in the analysis is defined. All metrics are computed on the **mo
 - Growth is descriptive; direction/strength significance comes from the trend tests below.
 
 ## Trend
+
 - **Linear regression** (`slope`, `r2`) of views on the month index. Simple, but sensitive to
   outliers — reported for context, not as the significance test.
 - **Mann-Kendall** (`mkTau`, `mkPValue`) — non-parametric trend test (no normality assumption,
@@ -42,6 +47,7 @@ How each number in the analysis is defined. All metrics are computed on the **mo
 - `direction` — `increasing`/`decreasing` when Mann-Kendall is significant, else `flat`.
 
 ## Seasonality
+
 - Requires >= 24 months. Builds a seasonal index per calendar month (month mean / overall mean).
 - `strength` — coefficient of variation of the 12 indices. `detected` when `strength >= 0.15`.
 - `peakMonth` / `troughMonth` — calendar months (1-12) of highest/lowest average interest.
@@ -49,6 +55,7 @@ How each number in the analysis is defined. All metrics are computed on the **mo
   which months fall in each half — flagged in confidence reasons.
 
 ## Spikes and robustness
+
 - The series is detrended against a centered moving median (window 5) so a gradual trend or level
   shift is **not** mistaken for many spikes.
 - A month is a `spike` when the robust z-score of its residual exceeds 3.5.
@@ -57,23 +64,24 @@ How each number in the analysis is defined. All metrics are computed on the **mo
   the same direction (and stay significant if it was)? If not, the change is spike-driven.
 
 ## Confidence rubric
+
 A transparent additive score → label. Positive factors raise it; weaknesses are listed in
 `confidenceReasons` even when overall confidence is high.
 
-| Factor | Points |
-| --- | --- |
-| History >= 24 months | +2 |
-| History 12–23 months | +1 |
-| Mann-Kendall p < 0.01 | +2 |
-| Mann-Kendall p < 0.05 | +1 |
-| Volume high | +2 |
-| Volume medium | +1 |
-| Volume very-low | −1 |
-| Growth robust to spikes | +1 |
-| No missing months | +1 |
-| Article match high (Wikidata/override) | +1 |
-| Article match none | −2 |
-| Seasonal pattern on a non-annual window | −1 |
+| Factor                                  | Points |
+| --------------------------------------- | ------ |
+| History >= 24 months                    | +2     |
+| History 12–23 months                    | +1     |
+| Mann-Kendall p < 0.01                   | +2     |
+| Mann-Kendall p < 0.05                   | +1     |
+| Volume high                             | +2     |
+| Volume medium                           | +1     |
+| Volume very-low                         | −1     |
+| Growth robust to spikes                 | +1     |
+| No missing months                       | +1     |
+| Article match high (Wikidata/override)  | +1     |
+| Article match none                      | −2     |
+| Seasonal pattern on a non-annual window | −1     |
 
 Label: **high** if score >= 6, **medium** if 3–5, else **low**.
 

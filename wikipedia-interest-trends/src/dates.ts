@@ -59,7 +59,12 @@ export interface Window {
  * last COMPLETE month (the current month is excluded because its pageviews are still accumulating).
  * Clamped to the API data floor.
  */
-export function resolveWindow(opts: { from?: string; to?: string; window?: number; now?: Date }): Window {
+export function resolveWindow(opts: {
+  from?: string;
+  to?: string;
+  window?: number;
+  now?: Date;
+}): Window {
   const now = opts.now ?? new Date();
   const normFrom = opts.from ? normalizeStart(opts.from) : null;
   const normTo = opts.to ? normalizeEnd(opts.to) : null;
@@ -70,13 +75,18 @@ export function resolveWindow(opts: { from?: string; to?: string; window?: numbe
     from = normFrom;
     to = normTo;
   } else {
-    const windowMonths = opts.window && opts.window > 0 ? Math.floor(opts.window) : 24;
+    const windowMonths =
+      opts.window && opts.window > 0 ? Math.floor(opts.window) : 24;
     // Last day of the previous month.
-    const lastComplete = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
+    const lastComplete = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0),
+    );
     const endYear = lastComplete.getUTCFullYear();
     const endMonth0 = lastComplete.getUTCMonth();
     to = normTo ?? isoDate(lastComplete);
-    from = normFrom ?? isoDate(new Date(Date.UTC(endYear, endMonth0 - (windowMonths - 1), 1)));
+    from =
+      normFrom ??
+      isoDate(new Date(Date.UTC(endYear, endMonth0 - (windowMonths - 1), 1)));
   }
 
   if (from < DATA_FLOOR) from = DATA_FLOOR;

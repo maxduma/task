@@ -97,7 +97,10 @@ function commonParams(flags: Map<string, string[]>): RunParams {
   };
 }
 
-function summarize(artifact: AnalysisArtifact, artifacts?: Record<string, string>) {
+function summarize(
+  artifact: AnalysisArtifact,
+  artifacts?: Record<string, string>,
+) {
   return {
     topic: artifact.topic,
     window: artifact.window,
@@ -115,8 +118,12 @@ function summarize(artifact: AnalysisArtifact, artifacts?: Record<string, string
       monthsCovered: r.monthsCovered,
       meanMonthly: Math.round(r.meanMonthly),
       volume: r.volumeBucket,
-      growthPoPPct: r.growth.periodOverPeriodPct === null ? null : Number(r.growth.periodOverPeriodPct.toFixed(1)),
-      cagrPct: r.growth.cagrPct === null ? null : Number(r.growth.cagrPct.toFixed(1)),
+      growthPoPPct:
+        r.growth.periodOverPeriodPct === null
+          ? null
+          : Number(r.growth.periodOverPeriodPct.toFixed(1)),
+      cagrPct:
+        r.growth.cagrPct === null ? null : Number(r.growth.cagrPct.toFixed(1)),
       trend: r.trend.direction,
       mkPValue: Number(r.trend.mkPValue.toFixed(3)),
       sensAnnualizedPct: Number(r.trend.sensSlopeAnnualizedPct.toFixed(1)),
@@ -132,7 +139,11 @@ function summarize(artifact: AnalysisArtifact, artifacts?: Record<string, string
   };
 }
 
-async function saveArtifact(outDir: string, name: string, artifact: AnalysisArtifact): Promise<string> {
+async function saveArtifact(
+  outDir: string,
+  name: string,
+  artifact: AnalysisArtifact,
+): Promise<string> {
   await mkdir(outDir, { recursive: true });
   const path = join(outDir, `${name}.analysis.json`);
   await writeFile(path, JSON.stringify(artifact, null, 2), "utf8");
@@ -205,31 +216,41 @@ async function cmdResolve(flags: Map<string, string[]>): Promise<void> {
     .map((s) => s.trim())
     .filter(Boolean);
   if (languages.length === 0) throw new Error("--languages is required");
-  const resolved = await resolveArticles(one(flags, "topic") ?? null, languages, {
-    searchLang: one(flags, "search-lang"),
-    overrides: parseOverrides(flags),
-    refresh: bool(flags, "refresh"),
-  });
+  const resolved = await resolveArticles(
+    one(flags, "topic") ?? null,
+    languages,
+    {
+      searchLang: one(flags, "search-lang"),
+      overrides: parseOverrides(flags),
+      refresh: bool(flags, "refresh"),
+    },
+  );
   print(resolved);
 }
 
 async function cmdFetch(flags: Map<string, string[]>): Promise<void> {
   const project = one(flags, "project");
   const article = one(flags, "article");
-  if (!project || !article) throw new Error("--project and --article are required");
+  if (!project || !article)
+    throw new Error("--project and --article are required");
   const window = resolveWindow({
     from: one(flags, "from"),
     to: one(flags, "to"),
     window: one(flags, "window") ? Number(one(flags, "window")) : undefined,
   });
-  const series = await fetchPageviews(project.split(".")[0] ?? project, project, article, {
-    granularity: (one(flags, "granularity") as Granularity) ?? "monthly",
-    access: (one(flags, "access") as Access) ?? "all-access",
-    agent: (one(flags, "agent") as Agent) ?? "user",
-    from: window.from,
-    to: window.to,
-    refresh: bool(flags, "refresh"),
-  });
+  const series = await fetchPageviews(
+    project.split(".")[0] ?? project,
+    project,
+    article,
+    {
+      granularity: (one(flags, "granularity") as Granularity) ?? "monthly",
+      access: (one(flags, "access") as Access) ?? "all-access",
+      agent: (one(flags, "agent") as Agent) ?? "user",
+      from: window.from,
+      to: window.to,
+      refresh: bool(flags, "refresh"),
+    },
+  );
   const views = series.points.map((p) => p.views);
   print({
     project,
@@ -247,7 +268,9 @@ async function cmdFetch(flags: Map<string, string[]>): Promise<void> {
 async function cmdReport(flags: Map<string, string[]>): Promise<void> {
   const dataPath = one(flags, "data");
   if (!dataPath) throw new Error("--data <name>.analysis.json is required");
-  const artifact = JSON.parse(await readFile(dataPath, "utf8")) as AnalysisArtifact;
+  const artifact = JSON.parse(
+    await readFile(dataPath, "utf8"),
+  ) as AnalysisArtifact;
   const outDir = one(flags, "out") ?? "out";
   const name = one(flags, "name") ?? slugify(artifact.topic ?? undefined);
   const reportLang = one(flags, "report-lang") ?? artifact.languages[0] ?? "en";
@@ -280,6 +303,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  process.stderr.write(`Error: ${err instanceof Error ? err.message : String(err)}\n`);
+  process.stderr.write(
+    `Error: ${err instanceof Error ? err.message : String(err)}\n`,
+  );
   process.exitCode = 1;
 });

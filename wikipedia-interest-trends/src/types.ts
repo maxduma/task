@@ -102,7 +102,11 @@ export interface SeriesAnalysis {
 }
 
 export interface Comparison {
-  rankedByGrowth: Array<{ language: string; periodOverPeriodPct: number | null; confidence: Confidence }>;
+  rankedByGrowth: Array<{
+    language: string;
+    periodOverPeriodPct: number | null;
+    confidence: Confidence;
+  }>;
   strongest: string | null;
   weakest: string | null;
   notes: string[];

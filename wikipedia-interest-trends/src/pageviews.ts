@@ -1,10 +1,17 @@
 // Fetch per-article pageviews from the Wikimedia REST API, with caching.
-import type { Access, Agent, Granularity, PageviewPoint, Series } from "./types.ts";
+import type {
+  Access,
+  Agent,
+  Granularity,
+  PageviewPoint,
+  Series,
+} from "./types.ts";
 import { getJson } from "./http.ts";
 import { getCached, setCached } from "./cache.ts";
 import { timestampToIso, toApiDate } from "./dates.ts";
 
-const API_BASE = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article";
+const API_BASE =
+  "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article";
 
 export interface FetchOptions {
   granularity: Granularity;

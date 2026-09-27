@@ -22,7 +22,10 @@ function keyToPath(key: string): string {
   return join(CACHE_DIR, `${hash}.json`);
 }
 
-export async function getCached<T>(key: string, ttlMs = DEFAULT_TTL_MS): Promise<T | null> {
+export async function getCached<T>(
+  key: string,
+  ttlMs = DEFAULT_TTL_MS,
+): Promise<T | null> {
   try {
     const raw = await readFile(keyToPath(key), "utf8");
     const entry = JSON.parse(raw) as CacheEntry<T>;

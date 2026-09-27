@@ -108,9 +108,24 @@ const DICTS: Record<string, Dict> = {
 };
 
 const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English", uk: "Ukrainian", pl: "Polish", cs: "Czech", de: "German", es: "Spanish",
-  fr: "French", it: "Italian", pt: "Portuguese", nl: "Dutch", ru: "Russian", ja: "Japanese",
-  zh: "Chinese", tr: "Turkish", sv: "Swedish", ro: "Romanian", hu: "Hungarian", fi: "Finnish",
+  en: "English",
+  uk: "Ukrainian",
+  pl: "Polish",
+  cs: "Czech",
+  de: "German",
+  es: "Spanish",
+  fr: "French",
+  it: "Italian",
+  pt: "Portuguese",
+  nl: "Dutch",
+  ru: "Russian",
+  ja: "Japanese",
+  zh: "Chinese",
+  tr: "Turkish",
+  sv: "Swedish",
+  ro: "Romanian",
+  hu: "Hungarian",
+  fi: "Finnish",
 };
 
 export function dictFor(lang: string): Dict {

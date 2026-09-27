@@ -10,7 +10,10 @@ const MAX_RETRIES = 4;
 const BASE_DELAY_MS = 500;
 
 export class HttpError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
     this.name = "HttpError";
   }
@@ -36,14 +39,18 @@ export async function getJson<T>(url: string): Promise<JsonResult<T>> {
       if (res.status === 404) return { status: 404, data: null };
       if (res.status === 429 || res.status >= 500) {
         const retryAfter = Number(res.headers.get("retry-after"));
-        const delay = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : BASE_DELAY_MS * 2 ** attempt;
+        const delay =
+          Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : BASE_DELAY_MS * 2 ** attempt;
         if (attempt < MAX_RETRIES) {
           await sleep(delay);
           continue;
         }
         throw new HttpError(res.status, `HTTP ${res.status} for ${url}`);
       }
-      if (!res.ok) throw new HttpError(res.status, `HTTP ${res.status} for ${url}`);
+      if (!res.ok)
+        throw new HttpError(res.status, `HTTP ${res.status} for ${url}`);
       const data = (await res.json()) as T;
       return { status: res.status, data };
     } catch (err) {
@@ -56,5 +63,7 @@ export async function getJson<T>(url: string): Promise<JsonResult<T>> {
       }
     }
   }
-  throw lastError instanceof Error ? lastError : new Error(`Request failed: ${url}`);
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`Request failed: ${url}`);
 }

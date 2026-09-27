@@ -24,7 +24,10 @@ export interface ResolveOptions {
   refresh?: boolean;
 }
 
-async function cachedGetJson<T>(url: string, refresh?: boolean): Promise<T | null> {
+async function cachedGetJson<T>(
+  url: string,
+  refresh?: boolean,
+): Promise<T | null> {
   if (!refresh) {
     const cached = await getCached<T>(url);
     if (cached) return cached;
@@ -38,7 +41,11 @@ interface WbSearch {
   search?: Array<{ id: string; label?: string; description?: string }>;
 }
 
-async function searchWikidata(term: string, lang: string, refresh?: boolean): Promise<string | null> {
+async function searchWikidata(
+  term: string,
+  lang: string,
+  refresh?: boolean,
+): Promise<string | null> {
   const url =
     `https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&limit=1` +
     `&language=${encodeURIComponent(lang)}&uselang=${encodeURIComponent(lang)}&search=${encodeURIComponent(term)}`;
@@ -50,7 +57,10 @@ interface WbEntities {
   entities?: Record<string, { sitelinks?: Record<string, { title: string }> }>;
 }
 
-async function getSitelinks(qid: string, refresh?: boolean): Promise<Record<string, { title: string }> | null> {
+async function getSitelinks(
+  qid: string,
+  refresh?: boolean,
+): Promise<Record<string, { title: string }> | null> {
   const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=sitelinks&ids=${encodeURIComponent(qid)}`;
   const data = await cachedGetJson<WbEntities>(url, refresh);
   return data?.entities?.[qid]?.sitelinks ?? null;
@@ -60,7 +70,11 @@ interface MwSearch {
   query?: { search?: Array<{ title: string }> };
 }
 
-async function searchWikipedia(lang: string, term: string, refresh?: boolean): Promise<string | null> {
+async function searchWikipedia(
+  lang: string,
+  term: string,
+  refresh?: boolean,
+): Promise<string | null> {
   const host = projectFor(lang).split(".")[0];
   const url =
     `https://${host}.wikipedia.org/w/api.php?action=query&list=search&format=json&srlimit=1` +
@@ -93,7 +107,14 @@ export async function resolveArticles(
     const project = projectFor(language);
     const override = opts.overrides?.get(language);
     if (override) {
-      results.push({ language, project, title: override, qid, method: "override", confidence: "high" });
+      results.push({
+        language,
+        project,
+        title: override,
+        qid,
+        method: "override",
+        confidence: "high",
+      });
       continue;
     }
 
@@ -103,7 +124,14 @@ export async function resolveArticles(
     if (qid && sitelinks) {
       const fromSitelink = sitelinks[wikiIdFor(language)]?.title ?? null;
       if (fromSitelink) {
-        results.push({ language, project, title: fromSitelink, qid, method: "wikidata", confidence: "high" });
+        results.push({
+          language,
+          project,
+          title: fromSitelink,
+          qid,
+          method: "wikidata",
+          confidence: "high",
+        });
       } else {
         results.push({
           language,
@@ -119,7 +147,9 @@ export async function resolveArticles(
     }
 
     // No Wikidata concept matched at all: fall back to a per-language search (verify the result).
-    const searched = topic ? await searchWikipedia(language, topic, opts.refresh) : null;
+    const searched = topic
+      ? await searchWikipedia(language, topic, opts.refresh)
+      : null;
     if (searched) {
       results.push({
         language,
@@ -139,7 +169,10 @@ export async function resolveArticles(
       qid,
       method: "none",
       confidence: "low",
-      note: "no matching article found; pass --title " + language + "=<Exact_Title>",
+      note:
+        "no matching article found; pass --title " +
+        language +
+        "=<Exact_Title>",
     });
   }
   return results;

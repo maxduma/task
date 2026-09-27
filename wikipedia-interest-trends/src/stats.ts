@@ -15,7 +15,9 @@ export function median(xs: number[]): number {
   if (xs.length === 0) return 0;
   const sorted = [...xs].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!;
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1]! + sorted[mid]!) / 2
+    : sorted[mid]!;
 }
 
 /** Sample standard deviation (n-1). Returns 0 for fewer than 2 points. */
@@ -77,7 +79,9 @@ export function erf(x: number): number {
   const t = 1 / (1 + 0.3275911 * ax);
   const y =
     1 -
-    ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) *
+    ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) *
+      t +
+      0.254829592) *
       t *
       Math.exp(-ax * ax);
   return sign * y;
@@ -158,7 +162,9 @@ export function movingAverage(ys: number[], window: number): number[] {
 export function centeredMovingMedian(ys: number[], window: number): number[] {
   if (window <= 1) return [...ys];
   const half = Math.floor(window / 2);
-  return ys.map((_, i) => median(ys.slice(Math.max(0, i - half), Math.min(ys.length, i + half + 1))));
+  return ys.map((_, i) =>
+    median(ys.slice(Math.max(0, i - half), Math.min(ys.length, i + half + 1))),
+  );
 }
 
 /** Robust z-scores using median and MAD. Flags spikes without being skewed by them. */

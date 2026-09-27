@@ -10,19 +10,24 @@ Turn Wikipedia pageview statistics into topic- and language-market decisions. Al
 summary and writes artifacts to disk. Do not re-implement the analysis in the model — call the CLI.
 
 ## When to use
+
 - "Is interest in <topic> growing in <language> Wikipedia, and can we trust it?"
 - "Compare interest in <topic> across <languages>."
 - "We are choosing a language to launch / a course to add — what does the data say?"
 
 ## Setup (run once, in this skill directory)
+
 ```bash
 npm ci || npm install
 ```
+
 Requires Node >= 18 and internet access to the Wikimedia API. Fonts for Cyrillic/diacritics are
 bundled in `assets/fonts/`. Nothing else to configure.
 
 ## Primary command: run the full pipeline
+
 Resolve article titles → fetch pageviews (cached) → analyze → build charts + one-page PDF.
+
 ```bash
 npm run cli -- run \
   --topic "Intermittent fasting" \
@@ -30,6 +35,7 @@ npm run cli -- run \
   --window 24 \
   --report-lang uk
 ```
+
 It prints a compact JSON object (resolved titles, per-language metrics, comparison, artifact paths,
 caveats) and writes to `out/`: `<name>.pdf`, `<name>.png` (comparison chart), and
 `<name>.analysis.json` (full data, reusable by the `report` command).
@@ -38,7 +44,9 @@ Read the JSON, then write the user a short data-grounded answer. Base every clai
 metrics, name the exact article titles used, and surface the `caveats` and confidence rating.
 
 ## Workflow checklist
+
 Copy and track:
+
 ```
 - [ ] 1. Run `resolve` (or `run`) and confirm the resolved article titles match the intended topic
 - [ ] 2. If a title is wrong/ambiguous, re-run with --title <lang>=<Exact_Title> overrides
@@ -49,6 +57,7 @@ Copy and track:
 ```
 
 ## Commands
+
 Run any command with `npm run cli -- <command> --help` for full options.
 
 - `run` — full pipeline (topic + languages → metrics + PDF/PNG). Main entry point.
@@ -63,6 +72,7 @@ Key `run`/`analyze` options: `--topic`, `--languages uk,pl,cs`, `--window 24` (m
 `--report-lang <lang>`, `--out out/`, `--name <slug>`, `--refresh` (bypass cache).
 
 ## Interpreting results (be honest about limits)
+
 - Report the **confidence** rating (`high`/`medium`/`low`) and its `reasons`. Do not overstate.
 - **Growth** = recent period vs previous period (%) and CAGR. **Trend** significance comes from the
   Mann-Kendall test (`pValue`) with Sen's slope; treat `pValue >= 0.05` as "not statistically clear".
@@ -73,6 +83,7 @@ Key `run`/`analyze` options: `--topic`, `--languages uk,pl,cs`, `--window 24` (m
   and closely related pages are not summed unless requested).
 
 ## Reference (read only what a task needs)
+
 - [reference/metrics.md](reference/metrics.md) — exact metric definitions and the confidence rubric.
 - [reference/api.md](reference/api.md) — Wikimedia + Wikidata endpoints, parameters, encoding, limits.
 - [reference/languages.md](reference/languages.md) — language→project mapping and title-resolution gotchas.

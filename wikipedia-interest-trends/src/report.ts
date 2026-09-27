@@ -16,11 +16,28 @@ const FONT_REGULAR = join(FONT_DIR, "DejaVuSans.ttf");
 const FONT_BOLD = join(FONT_DIR, "DejaVuSans-Bold.ttf");
 const HAVE_FONTS = existsSync(FONT_REGULAR) && existsSync(FONT_BOLD);
 
-const PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#be185d", "#4d7c0f"];
+const PALETTE = [
+  "#2563eb",
+  "#dc2626",
+  "#059669",
+  "#d97706",
+  "#7c3aed",
+  "#0891b2",
+  "#be185d",
+  "#4d7c0f",
+];
 
 function escapeXml(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
-    c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === '"' ? "&quot;" : "&#39;",
+    c === "&"
+      ? "&amp;"
+      : c === "<"
+        ? "&lt;"
+        : c === ">"
+          ? "&gt;"
+          : c === '"'
+            ? "&quot;"
+            : "&#39;",
   );
 }
 
@@ -64,7 +81,8 @@ function renderLineChartSVG(
   const maxVal = Math.max(1, ...series.flatMap((s) => s.values));
   const niceMax = niceCeil(maxVal);
 
-  const xPos = (i: number) => left + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+  const xPos = (i: number) =>
+    left + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW);
   const yPos = (v: number) => top + innerH - (v / niceMax) * innerH;
 
   const parts: string[] = [];
@@ -72,14 +90,20 @@ function renderLineChartSVG(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="DejaVu Sans, sans-serif">`,
   );
   parts.push(`<rect width="${width}" height="${height}" fill="#ffffff"/>`);
-  parts.push(`<text x="${left}" y="26" font-size="18" font-weight="bold" fill="#111827">${escapeXml(title)}</text>`);
+  parts.push(
+    `<text x="${left}" y="26" font-size="18" font-weight="bold" fill="#111827">${escapeXml(title)}</text>`,
+  );
 
   // Legend row under the title.
   let lx = left;
   const ly = 42;
   for (const s of series) {
-    parts.push(`<rect x="${lx}" y="${ly - 8}" width="10" height="10" fill="${s.color}"/>`);
-    parts.push(`<text x="${lx + 14}" y="${ly + 1}" font-size="11" fill="#374151">${escapeXml(s.label)}</text>`);
+    parts.push(
+      `<rect x="${lx}" y="${ly - 8}" width="10" height="10" fill="${s.color}"/>`,
+    );
+    parts.push(
+      `<text x="${lx + 14}" y="${ly + 1}" font-size="11" fill="#374151">${escapeXml(s.label)}</text>`,
+    );
     lx += 24 + s.label.length * 6.2;
   }
 
@@ -88,33 +112,53 @@ function renderLineChartSVG(
   for (let t = 0; t <= ticks; t++) {
     const v = (niceMax / ticks) * t;
     const y = yPos(v);
-    parts.push(`<line x1="${left}" y1="${y}" x2="${left + innerW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`);
-    parts.push(`<text x="${left - 8}" y="${y + 3}" font-size="10" text-anchor="end" fill="#6b7280">${formatCompact(v)}</text>`);
+    parts.push(
+      `<line x1="${left}" y1="${y}" x2="${left + innerW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`,
+    );
+    parts.push(
+      `<text x="${left - 8}" y="${y + 3}" font-size="10" text-anchor="end" fill="#6b7280">${formatCompact(v)}</text>`,
+    );
   }
 
   // X ticks (about 6 evenly spaced).
   const xTickCount = Math.min(6, n);
   for (let t = 0; t < xTickCount; t++) {
-    const i = xTickCount <= 1 ? 0 : Math.round((t / (xTickCount - 1)) * (n - 1));
+    const i =
+      xTickCount <= 1 ? 0 : Math.round((t / (xTickCount - 1)) * (n - 1));
     const x = xPos(i);
-    parts.push(`<line x1="${x}" y1="${top + innerH}" x2="${x}" y2="${top + innerH + 4}" stroke="#9ca3af" stroke-width="1"/>`);
-    parts.push(`<text x="${x}" y="${top + innerH + 18}" font-size="10" text-anchor="middle" fill="#6b7280">${allDates[i]!.slice(0, 7)}</text>`);
+    parts.push(
+      `<line x1="${x}" y1="${top + innerH}" x2="${x}" y2="${top + innerH + 4}" stroke="#9ca3af" stroke-width="1"/>`,
+    );
+    parts.push(
+      `<text x="${x}" y="${top + innerH + 18}" font-size="10" text-anchor="middle" fill="#6b7280">${allDates[i]!.slice(0, 7)}</text>`,
+    );
   }
 
   // Axis lines.
-  parts.push(`<line x1="${left}" y1="${top}" x2="${left}" y2="${top + innerH}" stroke="#9ca3af" stroke-width="1"/>`);
-  parts.push(`<line x1="${left}" y1="${top + innerH}" x2="${left + innerW}" y2="${top + innerH}" stroke="#9ca3af" stroke-width="1"/>`);
+  parts.push(
+    `<line x1="${left}" y1="${top}" x2="${left}" y2="${top + innerH}" stroke="#9ca3af" stroke-width="1"/>`,
+  );
+  parts.push(
+    `<line x1="${left}" y1="${top + innerH}" x2="${left + innerW}" y2="${top + innerH}" stroke="#9ca3af" stroke-width="1"/>`,
+  );
 
   // Series polylines.
   for (const s of series) {
     if (s.values.length === 0) continue;
     const pts = s.dates
-      .map((d, k) => `${xPos(idxOf.get(d)!).toFixed(1)},${yPos(s.values[k]!).toFixed(1)}`)
+      .map(
+        (d, k) =>
+          `${xPos(idxOf.get(d)!).toFixed(1)},${yPos(s.values[k]!).toFixed(1)}`,
+      )
       .join(" ");
-    parts.push(`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`);
+    parts.push(
+      `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`,
+    );
   }
 
-  parts.push(`<text x="${left}" y="${height - 12}" font-size="10" fill="#6b7280">${escapeXml(caption)}</text>`);
+  parts.push(
+    `<text x="${left}" y="${height - 12}" font-size="10" fill="#6b7280">${escapeXml(caption)}</text>`,
+  );
   parts.push(`</svg>`);
   return parts.join("");
 }
@@ -122,7 +166,11 @@ function renderLineChartSVG(
 function svgToPng(svg: string, zoom: number): Buffer {
   const resvg = new Resvg(svg, {
     fitTo: { mode: "zoom", value: zoom },
-    font: { fontDirs: [FONT_DIR], defaultFontFamily: "DejaVu Sans", loadSystemFonts: false },
+    font: {
+      fontDirs: [FONT_DIR],
+      defaultFontFamily: "DejaVu Sans",
+      loadSystemFonts: false,
+    },
   });
   return resvg.render().asPng();
 }
@@ -173,14 +221,24 @@ export async function buildReport(
   await writeFile(chartPath, png);
 
   const pdfPath = join(opts.outDir, `${opts.name}.pdf`);
-  await writePdf(pdfPath, { artifact, dict: d, reportLang: opts.reportLang, png });
+  await writePdf(pdfPath, {
+    artifact,
+    dict: d,
+    reportLang: opts.reportLang,
+    png,
+  });
 
   return { pdf: pdfPath, chart: chartPath };
 }
 
 function writePdf(
   pdfPath: string,
-  ctx: { artifact: AnalysisArtifact; dict: Dict; reportLang: string; png: Buffer },
+  ctx: {
+    artifact: AnalysisArtifact;
+    dict: Dict;
+    reportLang: string;
+    png: Buffer;
+  },
 ): Promise<void> {
   const { artifact, dict, png } = ctx;
   const doc = new PDFDocument({ size: "A4", margin: 40 });
@@ -194,11 +252,16 @@ function writePdf(
   const stream = createWriteStream(pdfPath);
   doc.pipe(stream);
 
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const pageWidth =
+    doc.page.width - doc.page.margins.left - doc.page.margins.right;
   const left = doc.page.margins.left;
 
   // Header.
-  doc.font(bold).fontSize(18).fillColor("#111827").text(artifact.topic ?? dict.titleDefault, { width: pageWidth });
+  doc
+    .font(bold)
+    .fontSize(18)
+    .fillColor("#111827")
+    .text(artifact.topic ?? dict.titleDefault, { width: pageWidth });
   const langs = artifact.languages.map((c) => c.toUpperCase()).join(", ");
   doc
     .font(body)
@@ -222,7 +285,8 @@ function writePdf(
   doc.font(body).fontSize(10).fillColor("#1f2937");
   for (const r of artifact.results) {
     const pop = r.growth.periodOverPeriodPct;
-    const popStr = pop === null ? "—" : `${pop >= 0 ? "+" : ""}${pop.toFixed(0)}%`;
+    const popStr =
+      pop === null ? "—" : `${pop >= 0 ? "+" : ""}${pop.toFixed(0)}%`;
     const line = `${languageName(r.language)}: ${directionWord(r, dict)}, ${popStr} (${dict.popLabel}) — ${dict.confidenceHdr.toLowerCase()}: ${confWord(r.confidence, dict)}`;
     doc.text(`•  ${line}`, { width: pageWidth });
   }
@@ -237,7 +301,10 @@ function writePdf(
   doc.font(body).fontSize(9).fillColor("#4b5563");
   for (const r of artifact.results) {
     const reason = r.confidenceReasons[0] ? ` — ${r.confidenceReasons[0]}` : "";
-    doc.text(`•  ${r.language.toUpperCase()}: ${confWord(r.confidence, dict)}${reason}`, { width: pageWidth });
+    doc.text(
+      `•  ${r.language.toUpperCase()}: ${confWord(r.confidence, dict)}${reason}`,
+      { width: pageWidth },
+    );
   }
   doc.moveDown(0.5);
 
@@ -255,13 +322,17 @@ function writePdf(
       }
     }
   }
-  for (const c of caveats.slice(0, 8)) doc.text(`•  ${c}`, { width: pageWidth });
+  for (const c of caveats.slice(0, 8))
+    doc.text(`•  ${c}`, { width: pageWidth });
   doc.moveDown(0.5);
 
   // Footer: exact titles + source.
   doc.font(body).fontSize(8).fillColor("#9ca3af");
   const titles = artifact.resolved
-    .map((a) => `${a.language}: ${a.title ?? "—"}${a.method !== "wikidata" && a.method !== "override" ? ` (${a.method})` : ""}`)
+    .map(
+      (a) =>
+        `${a.language}: ${a.title ?? "—"}${a.method !== "wikidata" && a.method !== "override" ? ` (${a.method})` : ""}`,
+    )
     .join("  |  ");
   doc.text(`${dict.articles}: ${titles}`, { width: pageWidth });
   doc.text(dict.source, { width: pageWidth });

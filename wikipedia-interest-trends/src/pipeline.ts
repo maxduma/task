@@ -24,7 +24,9 @@ export interface RunParams {
   refresh?: boolean;
 }
 
-export async function runPipeline(params: RunParams): Promise<AnalysisArtifact> {
+export async function runPipeline(
+  params: RunParams,
+): Promise<AnalysisArtifact> {
   const resolved = await resolveArticles(params.topic, params.languages, {
     searchLang: params.searchLang,
     overrides: params.overrides,
@@ -65,13 +67,17 @@ export async function runPipeline(params: RunParams): Promise<AnalysisArtifact> 
   const comparison = buildComparison(results);
 
   const caveats: string[] = [];
-  const uncertain = resolved.filter((r) => r.method === "search" || r.method === "none");
+  const uncertain = resolved.filter(
+    (r) => r.method === "search" || r.method === "none",
+  );
   if (uncertain.length > 0) {
     caveats.push(
       `Article match is uncertain for: ${uncertain.map((u) => u.language).join(", ")}. Verify titles or pass --title overrides.`,
     );
   }
-  caveats.push("Pageviews measure attention, not willingness to pay; a language edition is not a market.");
+  caveats.push(
+    "Pageviews measure attention, not willingness to pay; a language edition is not a market.",
+  );
 
   return {
     topic: params.topic,
